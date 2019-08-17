@@ -12,14 +12,12 @@ language "python" {
 # preview-show-vars: cellValue, error, focused
 variables {
     cellValue, \
-    errorMessage, \
     error, \
     focused
 }
 initial_state {
     cellValue = ""
-    errorMessage = ""
-    focused = False,
+    focused = True
     error = False
 }
 
@@ -29,7 +27,6 @@ input "Add invalid character" {
     }
     body {
         cellValue = add_char(cellValue, random.choice(string.ascii_letters))
-        errorMessage = "Vul alleen cijfers van 1 tot en met 9 in"
         error = True
     }
 }
