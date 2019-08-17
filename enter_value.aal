@@ -1,0 +1,67 @@
+language "python" {
+    import random
+    import string
+
+    def add_char(string, char):
+        if random.choice([True, False]):
+            return char + string
+        else:
+            return string + char
+}
+adapter_init {
+
+}
+
+# preview-show-vars: cellValue, error, focused
+variables {
+    cellValue, \
+    errorMessage, \
+    error, \
+    focused
+}
+initial_state {
+    cellValue = ""
+    errorMessage = ""
+    focused = False,
+    error = False
+}
+
+input "Add invalid character" {
+    guard {
+        return focused and not error
+    }
+    body {
+        cellValue = add_char(cellValue, random.choice(string.ascii_letters))
+        errorMessage = "Vul alleen cijfers van 1 tot en met 9 in"
+        error = True
+    }
+}
+input "Add digit" {
+    guard {
+        return focused and not error
+    }
+
+    body {
+        cellValue = add_char(cellValue, str(random.randrange(1, 10)))
+    }
+}
+input "Leave focus" {
+    guard {
+        return focused
+    }
+
+    body {
+        if not error and len(cellValue) == 1:
+            cellValue = " " + cellValue
+        focused = False
+    }
+}
+input "Focus" {
+    guard {
+        return not focused
+    }
+
+    body {
+        focused = True
+    }
+}
