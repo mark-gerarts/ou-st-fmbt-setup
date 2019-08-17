@@ -8,9 +8,6 @@ language "python" {
         else:
             return string + char
 }
-adapter_init {
-
-}
 
 # preview-show-vars: cellValue, error, focused
 variables {
