@@ -1,0 +1,88 @@
+#!/bin/bash
+
+# fMBT, free Model Based Testing tool
+# Copyright (c) 2011, Intel Corporation.
+#
+# This program is free software; you can redistribute it and/or modify it
+# under the terms and conditions of the GNU Lesser General Public License,
+# version 2.1, as published by the Free Software Foundation.
+#
+# This program is distributed in the hope it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for
+# more details.
+#
+# You should have received a copy of the GNU Lesser General Public License along with
+# this program; if not, write to the Free Software Foundation, Inc.,
+# 51 Franklin St - Fifth Floor, Boston, MA 02110-1301 USA.
+
+########################################################################
+# This file has been adapted from https://github.com/intel/fMBT/blob/master/examples/offline-test-suite/weakly-connected.conf.
+# The original script generates test cases until the coverage doesn't increase
+# anymore.
+# Because of our model it is more interesting to generate X random tests.
+
+if [ ! -f "$1" ] || ! grep -q '^model' "$1"; then
+    echo "Usage: $0 <test-configuration-file>"
+    exit 1
+fi
+TESTCONF="$1"
+
+# The second argument specified the number of tests, default to 10.
+NUMBER_OF_TESTS=10
+if [ ! -z "$2" ]; then
+    NUMBER_OF_TESTS=$2
+fi
+
+# If test configuration contains a non-dummy adapter, this script will
+# both generate and execute tests. Otherwise, GENERATE_ONLY=yes.
+if ! grep -q ^adapter "$TESTCONF" || \
+    grep -q ^adapter "$TESTCONF" | grep \"dummy\"; then
+    GENERATE_ONLY=yes
+else
+    GENERATE_ONLY=no
+fi
+
+##########################################
+# Remove previously generated tests
+
+rm -f test*.log
+
+
+##########################################
+# Test generation loop
+
+verdict="inconclusive"
+testnumber=0
+
+# Loop until we reach NUMBER_OF_TESTS tests.
+while [ $testnumber -lt $NUMBER_OF_TESTS ]; do
+
+    # Configuration for the next test run (next-test.conf) is built as
+    # follows:
+    #
+    # - Append following line to original configuration:
+    #
+    #   history = "log:test<NUM>.log"
+    #
+    #   for each previously generated test <NUM>.
+
+    cp "$TESTCONF" next-test.conf
+
+    for prevlog in test*.log; do
+        echo "history = \"log($prevlog)\"" >> next-test.conf
+    done
+
+    testnumber=$(( $testnumber + 1 ))
+
+    # Generate the test.
+
+    fmbt -l test$testnumber.log next-test.conf
+done
+
+# Remove the last test if tests are only generated.
+if [ "$GENERATE_ONLY" == "yes" ]; then
+    rm -f test$testnumber.log
+fi
+
+rm -f next-test.conf

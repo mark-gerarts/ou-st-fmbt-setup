@@ -52,7 +52,7 @@ input "Leave focus" {
 }
 input "Focus" {
     guard {
-        return not focused
+        return not focused and not error
     }
 
     body {
